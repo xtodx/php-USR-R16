@@ -5,7 +5,7 @@ ob_implicit_flush();
         <table cellpadding="10" border="1">
             <tr>
                 <td>
-                    Порт
+                    Port
                 </td>
                 <td>
                     <?php
@@ -21,17 +21,17 @@ ob_implicit_flush();
             </tr>
             <tr>
                 <td>
-                    Команда
+                    Command
                 </td>
                 <td>
                     <select name="command">
-                        <option value="5">Включить все</option>
-                        <option value="4" <?php if ($_POST['command'] == 4) echo "selected" ?>>Выключить все</option>
-                        <option value="2" <?php if ($_POST['command'] == 2) echo "selected" ?>>Включить один</option>
-                        <option value="1" <?php if ($_POST['command'] == 1) echo "selected" ?>>Выключит один</option>
-                        <option value="3" <?php if ($_POST['command'] == 3) echo "selected" ?>>Инвертировать один
+                        <option value="5">On All</option>
+                        <option value="4" <?php if ($_POST['command'] == 4) echo "selected" ?>>Off All</option>
+                        <option value="2" <?php if ($_POST['command'] == 2) echo "selected" ?>>On One</option>
+                        <option value="1" <?php if ($_POST['command'] == 1) echo "selected" ?>>Off one</option>
+                        <option value="3" <?php if ($_POST['command'] == 3) echo "selected" ?>>Invert One
                         </option>
-                        <option value="6" <?php if ($_POST['command'] == 6) echo "selected" ?>>Инвертировать все
+                        <option value="6" <?php if ($_POST['command'] == 6) echo "selected" ?>>Invert All
                         </option>
                     </select>
                 </td>
@@ -60,32 +60,32 @@ class TcpGpio
     static function prettyHex($str)
     {
         $str = trim($str);
-        // дробим строку по два символа
+        // split a string of two characters
         $out = chunk_split(bin2hex($str), 2, ' ');
-        // создаем массив из строки
+        // create an array from the string
         $out = explode(' ', $out);
-        // добавляем к каждому элементу 0x
+        // we add to each element 0x
         foreach ($out as $k => $v) {
             if (!empty($v)) $out[$k] = '0x' . $out[$k];
         }
-        // возвращаем схлопнутый в строку массив
+        // return an arrayed array
         return implode(" ", $out);
     }
 
     static function prettyBin($str)
     {
-        //на всякий случай убираем пробелы
+        //just in case, remove the blanks
         $str = trim($str);
-        //разбиваем на массив
+        // break into an array
         $out = explode(' ', $str);
 
-        //убираем 0x
+        //remove 0x
         foreach ($out as $k => $v) {
             if (!empty($v)) $out[$k] = str_replace(['0x', " "], "", $out[$k]);
         }
-        //Собираем без пробелов
+        //We collect without spaces
         $out = implode("", $out);
-        //навад в бин
+        //back to bin
         return hex2bin($out);
     }
 
@@ -121,11 +121,10 @@ class TcpGpio
 
     function connect($data)
     {
-        /* Создаём  TCP/IP сокет. */
+        /* Create a TCP / IP socket. */
         $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if ($socket === false) {
             return false;
-            //echo "Не удалось выполнить socket_create(): причина: " . socket_strerror(socket_last_error()) . "\n";
         }
         $result = socket_connect($socket, $this->address, $this->service_port);
         if ($result === false) {
@@ -133,7 +132,7 @@ class TcpGpio
         }
         $auth = "admin\r\n";
         socket_write($socket, $auth, strlen($auth));
-        $out = $this->read($socket);
+
         $in = self::prettyBin($data);
         socket_write($socket, $in, strlen($in));
         $out = $this->read($socket);
@@ -199,7 +198,8 @@ class TcpGpio
 
 if (isset($_POST['submit'])) {
     $TCP = new TcpGpio("192.168.1.6", "8899");
-    /*Обязательные биты        |n+2 | ID | com | Сумма всей инфы без основной      . n - колво параметрво*/
+    /*Required bits        |n+2 | ID | com | The sum of all the information without the main      . n - number of parameters*/
+
     if ($_POST['command'] == 1) {
         $return = $TCP->gpioOff($_POST['port']);
     } elseif ($_POST['command'] == 2) {
@@ -216,5 +216,5 @@ if (isset($_POST['submit'])) {
     if ($return)
         echo "<h1>$return</h1>";
     else
-        echo "<h1>ERROR WTF</h1>";
+        echo "<h1>ERROR</h1>";
 }
